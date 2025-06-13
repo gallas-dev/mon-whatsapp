@@ -57,6 +57,63 @@ async function updateBlockedContactsCounter() {
   }
 }
 
+async function displayGroupes() {
+  const groupesList = document.getElementById("groupes-list");
+  if (!groupesList) return;
+
+  try {
+    const groupes = await getGroupes();
+    const activeGroupes = groupes.filter((g) => !g.closed);
+    groupesList.innerHTML = templates.groupesList(activeGroupes);
+  } catch (error) {
+    console.error("Erreur lors du chargement des groupes:", error);
+    groupesList.innerHTML = "<p>Erreur lors du chargement des groupes.</p>";
+  }
+}
+
+async function toggleGroupesView() {
+  const groupesContainer = document.getElementById("groupes-container");
+  const conversationsList = document.querySelector("#panel .overflow-y-auto:last-child");
+  const groupesBtn = document.getElementById("groupesBtn");
+  const allTabs = document.querySelectorAll("#panel .flex.border-b.border-gray-700 button");
+
+  if (!groupesContainer || !conversationsList) {
+    console.error("Éléments manquants:", { groupesContainer, conversationsList });
+    return;
+  }
+
+  // Réinitialiser tous les onglets
+  allTabs.forEach(tab => {
+    tab.classList.remove("text-green-500", "border-b-2", "border-green-500", "font-medium");
+    tab.classList.add("text-gray-400", "hover:text-white");
+  });
+
+  if (groupesContainer.classList.contains("hidden")) {
+    // Afficher les groupes
+    groupesContainer.classList.remove("hidden");
+    conversationsList.classList.add("hidden");
+    
+    // Activer l'onglet Groupes
+    if (groupesBtn) {
+      groupesBtn.classList.remove("text-gray-400", "hover:text-white");
+      groupesBtn.classList.add("text-green-500", "border-b-2", "border-green-500", "font-medium");
+    }
+    
+    await displayGroupes();
+  } else {
+    // Masquer les groupes et afficher les conversations
+    groupesContainer.classList.add("hidden");
+    conversationsList.classList.remove("hidden");
+    
+    // Activer l'onglet "Toutes"
+    const toutesBtn = allTabs[0];
+    if (toutesBtn) {
+      toutesBtn.classList.remove("text-gray-400", "hover:text-white");
+      toutesBtn.classList.add("text-green-500", "border-b-2", "border-green-500", "font-medium");
+    }
+  }
+}
+
 export async function setupPanelEvents() {
   document.addEventListener("click", async (event) => {
     const pup = document.getElementById("pup");
@@ -169,44 +226,6 @@ export async function setupPanelEvents() {
   });
 }
 
-async function toggleGroupesView() {
-  const groupesContainer = document.getElementById("groupes-container");
-  const conversationsList = document.querySelector(".overflow-y-auto");
-  const groupesBtn = document.getElementById("groupesBtn");
-  const allTabs = document.querySelectorAll(".flex.border-b.border-gray-700 button");
-
-  if (!groupesContainer || !conversationsList) return;
-
-  // Réinitialiser tous les onglets
-  allTabs.forEach(tab => {
-    tab.classList.remove("text-green-500", "border-b-2", "border-green-500", "font-medium");
-    tab.classList.add("text-gray-400", "hover:text-white");
-  });
-
-  if (groupesContainer.classList.contains("hidden")) {
-    // Afficher les groupes
-    groupesContainer.classList.remove("hidden");
-    conversationsList.classList.add("hidden");
-    
-    // Activer l'onglet Groupes
-    groupesBtn.classList.remove("text-gray-400", "hover:text-white");
-    groupesBtn.classList.add("text-green-500", "border-b-2", "border-green-500", "font-medium");
-    
-    await displayGroupes();
-  } else {
-    // Masquer les groupes et afficher les conversations
-    groupesContainer.classList.add("hidden");
-    conversationsList.classList.remove("hidden");
-    
-    // Activer l'onglet "Toutes"
-    const toutesBtn = document.querySelector(".flex.border-b.border-gray-700 button:first-child");
-    if (toutesBtn) {
-      toutesBtn.classList.remove("text-gray-400", "hover:text-white");
-      toutesBtn.classList.add("text-green-500", "border-b-2", "border-green-500", "font-medium");
-    }
-  }
-}
-
 export function setupAccueilEvents() {
   document.addEventListener("click", (event) => {
     if (event.target.closest("#logoutBtn")) {
@@ -293,20 +312,6 @@ async function displayBlockedContacts() {
   } catch (error) {
     console.error("Erreur lors du chargement des contacts bloqués:", error);
     blockedContactsList.innerHTML = templates.blockedContactsError;
-  }
-}
-
-async function displayGroupes() {
-  const groupesList = document.getElementById("groupes-list");
-  if (!groupesList) return;
-
-  try {
-    const groupes = await getGroupes();
-    const activeGroupes = groupes.filter((g) => !g.closed);
-    groupesList.innerHTML = templates.groupesList(activeGroupes);
-  } catch (error) {
-    console.error("Erreur lors du chargement des groupes:", error);
-    groupesList.innerHTML = "<p>Erreur lors du chargement des groupes.</p>";
   }
 }
 
