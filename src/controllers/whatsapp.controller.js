@@ -72,7 +72,6 @@ export async function setupPanelEvents() {
       "#contactBlocked": "/views/components/bloquerListe.html",
       "#newgroup": "/views/pages/nouveau.groupe.html",
       "#listedescontactbloquer": "/views/components/listecontactbloquer.html",
-      "#groupesBtn": "/views/components/groupes.html",
     };
 
     for (const [selector, url] of Object.entries(buttonHandlers)) {
@@ -82,8 +81,6 @@ export async function setupPanelEvents() {
           setupFn = setupNouvelleDiscussionEvents;
         } else if (selector === "#newgroup") {
           setupFn = setupGroupeEvents;
-        } else if (selector === "#groupesBtn") {
-          setupFn = displayGroupes;
         } else if (selector === "#listedescontactbloquer") {
           setupFn = displayBlockedContacts;
         } else if (selector === "#contactBlocked") {
@@ -98,6 +95,12 @@ export async function setupPanelEvents() {
         await loadTemplate(url, "panel", setupFn);
         return;
       }
+    }
+
+    // Gestion du clic sur l'onglet Groupes
+    if (event.target.closest("#groupesBtn")) {
+      await toggleGroupesView();
+      return;
     }
 
     const menupopup = event.target.closest("#menupopup");
@@ -164,6 +167,44 @@ export async function setupPanelEvents() {
       reurnInfo.closest("#reurnInfo").remove();
     }
   });
+}
+
+async function toggleGroupesView() {
+  const groupesContainer = document.getElementById("groupes-container");
+  const conversationsList = document.querySelector(".overflow-y-auto");
+  const groupesBtn = document.getElementById("groupesBtn");
+  const allTabs = document.querySelectorAll(".flex.border-b.border-gray-700 button");
+
+  if (!groupesContainer || !conversationsList) return;
+
+  // Réinitialiser tous les onglets
+  allTabs.forEach(tab => {
+    tab.classList.remove("text-green-500", "border-b-2", "border-green-500", "font-medium");
+    tab.classList.add("text-gray-400", "hover:text-white");
+  });
+
+  if (groupesContainer.classList.contains("hidden")) {
+    // Afficher les groupes
+    groupesContainer.classList.remove("hidden");
+    conversationsList.classList.add("hidden");
+    
+    // Activer l'onglet Groupes
+    groupesBtn.classList.remove("text-gray-400", "hover:text-white");
+    groupesBtn.classList.add("text-green-500", "border-b-2", "border-green-500", "font-medium");
+    
+    await displayGroupes();
+  } else {
+    // Masquer les groupes et afficher les conversations
+    groupesContainer.classList.add("hidden");
+    conversationsList.classList.remove("hidden");
+    
+    // Activer l'onglet "Toutes"
+    const toutesBtn = document.querySelector(".flex.border-b.border-gray-700 button:first-child");
+    if (toutesBtn) {
+      toutesBtn.classList.remove("text-gray-400", "hover:text-white");
+      toutesBtn.classList.add("text-green-500", "border-b-2", "border-green-500", "font-medium");
+    }
+  }
 }
 
 export function setupAccueilEvents() {
